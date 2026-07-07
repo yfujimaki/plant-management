@@ -3,7 +3,6 @@ import sqlite3
 import hashlib
 import os
 import secrets
-import socket
 import uuid
 from datetime import date, timedelta
 from functools import wraps
@@ -31,16 +30,6 @@ def get_or_create_secret_key():
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY') or get_or_create_secret_key()
 
-
-def get_lan_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(('8.8.8.8', 80))
-        return s.getsockname()[0]
-    except OSError:
-        return '127.0.0.1'
-    finally:
-        s.close()
 
 ROLES = {
     'member': 'メンバー',
@@ -593,7 +582,7 @@ def history():
 @app.route('/qr')
 @login_required
 def qr_code():
-    login_url = f'http://{get_lan_ip()}:{PORT}/login'
+    login_url = url_for('login', _external=True)
     return render_template('qr.html', login_url=login_url)
 
 
