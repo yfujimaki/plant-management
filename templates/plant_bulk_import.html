@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}一括登録{% endblock %}
+{% block content %}
+
+<div class="mb-3">
+  <a href="{{ url_for('plant_list') }}" class="text-decoration-none small text-muted">
+    <i class="bi bi-arrow-left me-1"></i>植物一覧に戻る
+  </a>
+</div>
+
+<h5 class="fw-bold mb-3"><i class="bi bi-list-check me-2"></i>テキストで一括登録</h5>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <p class="small text-muted mb-2">
+      Wordなどのリストをそのまま貼り付けられます。<br>
+      1行目が植物名、続く「【 】」から始まる行はメモとして登録されます。次の植物名（【 】で始まらない行）が来たら自動で区切られます。
+    </p>
+    <p class="small text-muted mb-2">
+      一覧のタイトルなど、植物名ではない行は含めずに貼り付けてください。
+    </p>
+    <div class="small fw-semibold mb-1">貼り付け例：</div>
+    <pre class="bg-light p-2 rounded small mb-0">フィカス・ベンガレンシス
+【水やり】土が乾いたらたっぷり
+【育て方】明るい場所。春に剪定。
+
+ポトス
+【水やり】表土が乾いたら
+【育て方】半日陰可。</pre>
+  </div>
+</div>
+
+<form method="POST">
+  <textarea name="bulk_text" class="form-control mb-3" rows="16" placeholder="ここに貼り付けてください" required></textarea>
+  <button type="submit" class="btn btn-success w-100 py-2 fw-bold">
+    <i class="bi bi-upload me-1"></i>解析して登録する
+  </button>
+</form>
+
+<p class="small text-muted mt-3">
+  水やり頻度・肥料・土替えの周期はいったん標準値で登録されます。登録後、各植物の「編集」から実際の頻度に調整してください。
+</p>
+
+{% endblock %}

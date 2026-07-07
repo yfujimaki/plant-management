@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}ホーム{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="fw-bold mb-0"><i class="bi bi-house me-2"></i>今日やること</h5>
+  <span class="text-muted small">登録植物 {{ plant_count }} 点 / {{ today.strftime('%Y-%m-%d') }}</span>
+</div>
+
+{% if not todo %}
+<div class="card">
+  <div class="card-body text-center text-muted py-5">
+    <i class="bi bi-emoji-smile fs-1 d-block mb-2 text-success"></i>
+    今日対応が必要な植物はありません。お疲れ様です！
+  </div>
+</div>
+{% else %}
+<div class="list-group mb-4">
+  {% for item in todo %}
+  <a href="{{ url_for('plant_detail', plant_id=item.plant.id) }}"
+     class="list-group-item list-group-item-action d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center">
+      {% if item.plant.photo %}
+      <img src="{{ url_for('static', filename='uploads/' + item.plant.photo) }}" class="rounded me-3"
+           style="width:48px;height:48px;object-fit:cover;">
+      {% else %}
+      <div class="rounded me-3 d-flex align-items-center justify-content-center bg-light text-muted"
+           style="width:48px;height:48px;"><i class="bi bi-flower3"></i></div>
+      {% endif %}
+      <div>
+        <div class="fw-semibold">{{ item.plant.name }}
+          <span class="badge bg-{{ STATUS_INFO[item.status][1] }} ms-1">
+            <i class="bi {{ ACTIONS[item.action].icon }} me-1"></i>{{ ACTIONS[item.action].label }}
+          </span>
+        </div>
+        <div class="small text-muted">{{ item.plant.location or '配置未設定' }}</div>
+      </div>
+    </div>
+    <div class="text-end">
+      {% if item.days_left < 0 %}
+      <span class="badge bg-danger">{{ -item.days_left }}日超過</span>
+      {% elif item.days_left == 0 %}
+      <span class="badge bg-warning text-dark">本日期限</span>
+      {% else %}
+      <span class="badge bg-warning text-dark">あと{{ item.days_left }}日</span>
+      {% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="text-end">
+  <a href="{{ url_for('plant_list') }}" class="btn btn-outline-success btn-sm">
+    <i class="bi bi-flower3 me-1"></i>植物一覧をすべて見る
+  </a>
+</div>
+
+{% endblock %}

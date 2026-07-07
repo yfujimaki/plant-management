@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}植物一覧{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="fw-bold mb-0"><i class="bi bi-flower3 me-2"></i>植物一覧</h5>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('plant_bulk_import') }}" class="btn btn-outline-success btn-sm">
+      <i class="bi bi-list-check me-1"></i>一括登録
+    </a>
+    <a href="{{ url_for('plant_new') }}" class="btn btn-success btn-sm">
+      <i class="bi bi-plus-circle me-1"></i>新規登録
+    </a>
+  </div>
+</div>
+
+<div class="mb-3">
+  {% if show_archived %}
+  <a href="{{ url_for('plant_list') }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>通常一覧に戻る
+  </a>
+  {% else %}
+  <a href="{{ url_for('plant_list', archived=1) }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-archive me-1"></i>アーカイブ済みを見る
+  </a>
+  {% endif %}
+</div>
+
+{% if not cards %}
+<div class="card"><div class="card-body text-center text-muted py-5">植物が登録されていません。</div></div>
+{% endif %}
+
+<div class="row g-3">
+  {% for c in cards %}
+  <div class="col-6 col-md-4 col-lg-3">
+    <a href="{{ url_for('plant_detail', plant_id=c.plant.id) }}" class="text-decoration-none text-dark">
+      <div class="card h-100">
+        {% if c.plant.photo %}
+        <img src="{{ url_for('static', filename='uploads/' + c.plant.photo) }}" class="plant-photo card-img-top">
+        {% else %}
+        <div class="plant-photo-placeholder"><i class="bi bi-flower3"></i></div>
+        {% endif %}
+        <div class="card-body p-2">
+          <div class="fw-semibold small text-truncate">{{ c.plant.name }}</div>
+          <div class="text-muted small text-truncate">{{ c.plant.location or '配置未設定' }}</div>
+          <span class="badge bg-{{ STATUS_INFO[c.overall][1] }} mt-1">{{ STATUS_INFO[c.overall][0] }}</span>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}{{ '植物を編集' if plant else '新規登録' }}{% endblock %}
+{% block content %}
+
+<h5 class="fw-bold mb-3">
+  <i class="bi bi-{{ 'pencil' if plant else 'plus-circle' }} me-2"></i>{{ '植物を編集' if plant else '植物を新規登録' }}
+</h5>
+
+<form method="POST" enctype="multipart/form-data" class="card">
+  <div class="card-body">
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">写真</label>
+      {% if plant and plant.photo %}
+      <div class="mb-2">
+        <img src="{{ url_for('static', filename='uploads/' + plant.photo) }}" style="max-width:200px;border-radius:8px;">
+      </div>
+      {% endif %}
+      <input type="file" name="photo" accept="image/*" capture="environment" class="form-control">
+      <div class="form-text">スマホなら撮影してそのまま登録できます。</div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">名前 <span class="text-danger">*</span></label>
+      <input type="text" name="name" class="form-control" required value="{{ plant.name if plant else '' }}" placeholder="例: パキラ（受付）">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">配置場所</label>
+      <input type="text" name="location" class="form-control" value="{{ plant.location if plant else '' }}" placeholder="例: 1階受付カウンター横">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">特徴・お世話メモ</label>
+      <textarea name="notes" class="form-control" rows="3" placeholder="例: 直射日光NG。葉水を好む。乾燥に強い。">{{ plant.notes if plant else '' }}</textarea>
+    </div>
+
+    <hr>
+    <h6 class="fw-semibold mb-3"><i class="bi bi-droplet-fill me-1"></i>水やり頻度（日数）</h6>
+    <div class="row g-2 mb-3">
+      <div class="col-6">
+        <label class="form-label small">夏（目安日数）</label>
+        <input type="number" name="water_days_summer" min="1" class="form-control" value="{{ plant.water_days_summer if plant else 7 }}">
+      </div>
+      <div class="col-6">
+        <label class="form-label small">冬（目安日数）</label>
+        <input type="number" name="water_days_winter" min="1" class="form-control" value="{{ plant.water_days_winter if plant else 14 }}">
+      </div>
+    </div>
+
+    <h6 class="fw-semibold mb-3"><i class="bi bi-flower1 me-1"></i>肥料</h6>
+    <div class="row g-2 mb-3">
+      <div class="col-6">
+        <label class="form-label small">頻度（目安日数）</label>
+        <input type="number" name="fertilize_days" min="1" class="form-control" value="{{ plant.fertilize_days if plant else 60 }}">
+      </div>
+      <div class="col-6">
+        <label class="form-label small">補足（時期など）</label>
+        <input type="text" name="fertilize_note" class="form-control" value="{{ plant.fertilize_note if plant else '' }}" placeholder="例: 4月〜10月の生育期のみ">
+      </div>
+    </div>
+
+    <h6 class="fw-semibold mb-3"><i class="bi bi-arrow-repeat me-1"></i>土の入れ替え</h6>
+    <div class="mb-3">
+      <label class="form-label small">頻度（目安日数）</label>
+      <input type="number" name="soil_days" min="1" class="form-control" value="{{ plant.soil_days if plant else 365 }}">
+    </div>
+
+    <button type="submit" class="btn btn-success w-100 py-2 fw-bold">
+      <i class="bi bi-check2 me-1"></i>{{ '更新する' if plant else '登録する' }}
+    </button>
+  </div>
+</form>
+
+{% endblock %}

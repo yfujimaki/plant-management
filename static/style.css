@@ -1,0 +1,161 @@
+body {
+  background-color: #f4f6f9;
+  font-family: 'Meiryo', 'MS Gothic', -apple-system, sans-serif;
+}
+
+.navbar {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.card {
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  border: 1px solid #e3e8ef;
+}
+
+.plant-photo {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background-color: #e9ecef;
+}
+
+.plant-photo-placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e9ecef;
+  color: #adb5bd;
+  font-size: 2.5rem;
+}
+
+.detail-photo {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  background-color: #e9ecef;
+}
+
+.care-btn {
+  min-height: 64px;
+}
+
+.badge {
+  font-weight: 500;
+}
+
+.floor-marker {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  cursor: pointer;
+  background-size: cover;
+  background-position: center;
+}
+
+.floor-marker.has-photo {
+  background-color: #e9ecef;
+}
+
+.floor-marker .status-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+.floor-marker.selected {
+  outline: 3px solid #0d6efd;
+  outline-offset: 2px;
+}
+
+.unplaced-item.selected {
+  background-color: #0d6efd !important;
+  color: #fff !important;
+  border-color: #0d6efd !important;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+.history-table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.history-table {
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+
+.history-table th,
+.history-table td {
+  border: 1px solid #e3e8ef;
+  padding: 3px 6px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.history-table th.plant-col,
+.history-table td.plant-col {
+  position: sticky;
+  left: 0;
+  background: #fff;
+  z-index: 2;
+  text-align: left;
+  font-weight: 600;
+  min-width: 120px;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-table th.plant-col {
+  background: #f8fafc;
+  z-index: 3;
+}
+
+.history-table td.weekend {
+  background-color: #fff5f5;
+}
+
+.history-table th.weekend {
+  background-color: #fff0f0;
+}
+
+.history-table .today-col {
+  background-color: #eafbf1;
+}
+
+.history-icon {
+  font-size: 0.85rem;
+  margin: 0 1px;
+}
+
+/* レスポンシブ調整 */
+@media (max-width: 768px) {
+  .container-fluid { padding-left: 10px; padding-right: 10px; }
+  h4.fw-bold { font-size: 1.1rem; }
+}
+
+/* 下部固定ナビの分だけ余白 */
+body { padding-bottom: 0; }

@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+
+# Runtime data (contains real employee/business data — not source)
+*.db
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Windows
+desktop.ini
+Thumbs.db

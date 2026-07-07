@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}{{ plant.name }}{% endblock %}
+{% block content %}
+
+<div class="mb-3">
+  <a href="{{ url_for('plant_list') }}" class="text-decoration-none small text-muted">
+    <i class="bi bi-arrow-left me-1"></i>植物一覧に戻る
+  </a>
+</div>
+
+<div class="card mb-3">
+  {% if plant.photo %}
+  <img src="{{ url_for('static', filename='uploads/' + plant.photo) }}" class="detail-photo card-img-top">
+  {% else %}
+  <div class="plant-photo-placeholder" style="max-height:320px;"><i class="bi bi-flower3"></i></div>
+  {% endif %}
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <h4 class="fw-bold mb-0">{{ plant.name }}</h4>
+        <div class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ plant.location or '配置未設定' }}</div>
+        {% if plant.floor_x is not none %}
+        <a href="{{ url_for('floorplan') }}" class="small text-decoration-none"><i class="bi bi-map me-1"></i>フロア図で見る</a>
+        {% endif %}
+      </div>
+      <a href="{{ url_for('plant_edit', plant_id=plant.id) }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-pencil me-1"></i>編集
+      </a>
+    </div>
+    {% if plant.notes %}
+    <p class="mt-3 mb-0">{{ plant.notes }}</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-2 mb-4">
+  {% for action, meta in ACTIONS.items() %}
+  {% set s = statuses[action] %}
+  <div class="col-12 col-md-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="fw-semibold"><i class="bi {{ meta.icon }} me-1"></i>{{ meta.label }}</span>
+          <span class="badge bg-{{ STATUS_INFO[s.status][1] }}">{{ STATUS_INFO[s.status][0] }}</span>
+        </div>
+        <div class="small text-muted mb-1">
+          {% if s.last_date %}
+          前回: {{ s.last_date.strftime('%m/%d') }}{% if s.last_by %}（{{ s.last_by }}）{% endif %}
+          {% else %}
+          記録なし
+          {% endif %}
+        </div>
+        <div class="small text-muted mb-3">
+          次回目安: {{ s.next_due.strftime('%m/%d') }}
+          （{% if action == 'water' %}周期{{ s.interval }}日{% else %}周期約{{ s.interval }}日{% endif %}）
+          {% if action == 'fertilize' and plant.fertilize_note %}<br>{{ plant.fertilize_note }}{% endif %}
+        </div>
+        <form method="POST" action="{{ url_for('plant_log', plant_id=plant.id) }}">
+          <input type="hidden" name="action" value="{{ action }}">
+          {% if s.done_today %}
+          <button type="button" class="btn btn-secondary w-100 care-btn" disabled>
+            <i class="bi bi-check-circle-fill me-1"></i>本日実施済み{% if s.last_by %}（{{ s.last_by }}）{% endif %}
+          </button>
+          {% else %}
+          <button type="submit" class="btn btn-success w-100 care-btn">
+            <i class="bi bi-check2 me-1"></i>{{ meta.label }}を記録
+          </button>
+          {% endif %}
+        </form>
+        {% if s.done_today %}
+        <form method="POST" action="{{ url_for('plant_log_delete', plant_id=plant.id, log_id=s.last_id) }}"
+              onsubmit="return confirm('本日の{{ meta.label }}の記録を取り消しますか？');" class="mt-1 text-center">
+          <button type="submit" class="btn btn-link btn-sm text-danger p-0">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>間違えたので取り消す
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<h6 class="fw-bold mb-2"><i class="bi bi-clock-history me-2"></i>お世話履歴</h6>
+{% if not history %}
+<p class="text-muted small">まだ記録がありません。</p>
+{% else %}
+<div class="list-group mb-4">
+  {% for h in history %}
+  <div class="list-group-item d-flex justify-content-between align-items-center">
+    <div>
+      <i class="bi {{ ACTIONS[h.action].icon }} me-2"></i>{{ ACTIONS[h.action].label }}
+      {% if h.comment %}<span class="text-muted small">— {{ h.comment }}</span>{% endif %}
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <div class="text-muted small text-end">{{ h.logged_at }}<br>{{ h.display_name }}</div>
+      <form method="POST" action="{{ url_for('plant_log_delete', plant_id=plant.id, log_id=h.id) }}"
+            onsubmit="return confirm('この記録を削除しますか？');">
+        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1" title="この記録を削除">
+          <i class="bi bi-trash"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if session.role == 'admin' %}
+<form method="POST" action="{{ url_for('plant_archive', plant_id=plant.id) }}"
+      onsubmit="return confirm('{{ '一覧に復帰させますか？' if plant.archived else 'この植物をアーカイブしますか？（一覧から非表示になります）' }}');">
+  {% if plant.archived %}
+  <input type="hidden" name="unarchive" value="1">
+  <button type="submit" class="btn btn-outline-success btn-sm"><i class="bi bi-arrow-counterclockwise me-1"></i>一覧に復帰</button>
+  {% else %}
+  <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-archive me-1"></i>アーカイブする</button>
+  {% endif %}
+</form>
+{% endif %}
+
+{% endblock %}

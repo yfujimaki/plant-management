@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}お世話履歴表{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="fw-bold mb-0"><i class="bi bi-calendar3 me-2"></i>お世話履歴表</h5>
+</div>
+
+<div class="btn-group btn-group-sm mb-3">
+  {% for d in [14, 30, 60, 90] %}
+  <a href="{{ url_for('history', days=d) }}"
+     class="btn {{ 'btn-success' if days == d else 'btn-outline-success' }}">過去{{ d }}日</a>
+  {% endfor %}
+</div>
+
+<div class="d-flex flex-wrap gap-3 small text-muted mb-2">
+  <span><i class="bi bi-droplet-fill text-primary me-1"></i>水やり</span>
+  <span><i class="bi bi-flower1 text-success me-1"></i>肥料</span>
+  <span><i class="bi bi-arrow-repeat text-warning me-1"></i>土の入れ替え</span>
+</div>
+
+{% if not rows %}
+<div class="card"><div class="card-body text-center text-muted py-5">植物が登録されていません。</div></div>
+{% else %}
+<div class="history-table-wrap card">
+  <table class="history-table mb-0">
+    <thead>
+      <tr>
+        <th class="plant-col">植物名</th>
+        {% for d in date_list %}
+        <th class="{{ 'weekend' if d.weekday() >= 5 else '' }} {{ 'today-col' if d == date_list[-1] else '' }}">
+          {{ d.month }}/{{ d.day }}<br>{{ weekday_ja[d.weekday()] }}
+        </th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td class="plant-col">
+          <a href="{{ url_for('plant_detail', plant_id=row.plant.id) }}" class="text-decoration-none text-dark">
+            {{ row.plant.name }}
+          </a>
+        </td>
+        {% for entries in row.cells %}
+        {% set d = date_list[loop.index0] %}
+        <td class="{{ 'weekend' if d.weekday() >= 5 else '' }} {{ 'today-col' if d == date_list[-1] else '' }}">
+          {% for e in entries %}
+          <i class="bi {{ ACTIONS[e.action].icon }} history-icon
+             {{ 'text-primary' if e.action == 'water' else ('text-success' if e.action == 'fertilize' else 'text-warning') }}"
+             title="{{ ACTIONS[e.action].label }}（{{ e.by }}）"></i>
+          {% endfor %}
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<p class="small text-muted mt-2">アイコンにカーソルを合わせる（スマホは長押し）と、誰が対応したか表示されます。</p>
+{% endif %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var wrap = document.querySelector('.history-table-wrap');
+    if (wrap) wrap.scrollLeft = wrap.scrollWidth;
+  });
+</script>
+
+{% endblock %}
