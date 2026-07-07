@@ -2,20 +2,34 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import sqlite3
 import hashlib
 import os
+import secrets
 import socket
 import uuid
 from datetime import date, timedelta
 from functools import wraps
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'nichiro-plant-mgmt-2026-secret')
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB = os.path.join(BASE_DIR, 'data', 'plants.db')
 UPLOAD_DIR = os.path.join(BASE_DIR, 'static', 'uploads')
 ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 PORT = 5002
+
+
+def get_or_create_secret_key():
+    key_path = os.path.join(BASE_DIR, 'data', 'secret_key.txt')
+    os.makedirs(os.path.dirname(key_path), exist_ok=True)
+    if os.path.exists(key_path):
+        with open(key_path, 'r') as f:
+            return f.read().strip()
+    key = secrets.token_hex(32)
+    with open(key_path, 'w') as f:
+        f.write(key)
+    return key
+
+
+app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY') or get_or_create_secret_key()
 
 
 def get_lan_ip():
