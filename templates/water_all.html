@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}一括水やり{% endblock %}
+{% block content %}
+
+<h5 class="fw-bold mb-3"><i class="bi bi-droplet-fill me-2 text-primary"></i>一括水やり</h5>
+
+<p class="small text-muted mb-3">
+  すべての植物にチェックが入っています。水やりしないものだけチェックを外してから、下のボタンを押してください。
+</p>
+
+{% if not rows %}
+<div class="card"><div class="card-body text-center text-muted py-5">植物が登録されていません。</div></div>
+{% else %}
+<form method="POST">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="btn-group btn-group-sm">
+      <button type="button" id="selectAll" class="btn btn-outline-secondary">すべて選択</button>
+      <button type="button" id="selectNone" class="btn btn-outline-secondary">すべて解除</button>
+    </div>
+    <span class="small text-muted"><span id="selectedCount">0</span>件選択中</span>
+  </div>
+
+  <div class="list-group mb-3">
+    {% for row in rows %}
+    <label class="list-group-item d-flex align-items-center gap-3 {{ 'bg-light text-muted' if row.done_today }}">
+      <input type="checkbox" name="plant_ids" value="{{ row.plant.id }}" class="form-check-input flex-shrink-0 water-check"
+             {% if not row.done_today %}checked{% endif %} {% if row.done_today %}disabled{% endif %}>
+      <span class="badge bg-secondary flex-shrink-0" style="width:2rem;">{{ loop.index }}</span>
+      {% if row.plant.photo %}
+      <img src="{{ url_for('static', filename='uploads/' + row.plant.photo) }}" class="rounded flex-shrink-0"
+           style="width:44px;height:44px;object-fit:cover;">
+      {% else %}
+      <div class="rounded d-flex align-items-center justify-content-center bg-light text-muted flex-shrink-0"
+           style="width:44px;height:44px;"><i class="bi bi-flower3"></i></div>
+      {% endif %}
+      <span class="flex-grow-1">
+        {{ row.plant.name }}
+        {% if row.done_today %}<span class="badge bg-secondary ms-1">本日実施済み</span>{% endif %}
+      </span>
+    </label>
+    {% endfor %}
+  </div>
+
+  <button type="submit" class="btn btn-success w-100 py-2 fw-bold">
+    <i class="bi bi-check2-all me-1"></i>選択した植物に水やりを記録する
+  </button>
+</form>
+
+<script>
+(function () {
+  const checks = document.querySelectorAll('.water-check');
+  const counter = document.getElementById('selectedCount');
+  function updateCount() {
+    counter.textContent = document.querySelectorAll('.water-check:checked').length;
+  }
+  checks.forEach(function (c) { c.addEventListener('change', updateCount); });
+  document.getElementById('selectAll').addEventListener('click', function () {
+    checks.forEach(function (c) { if (!c.disabled) c.checked = true; });
+    updateCount();
+  });
+  document.getElementById('selectNone').addEventListener('click', function () {
+    checks.forEach(function (c) { if (!c.disabled) c.checked = false; });
+    updateCount();
+  });
+  updateCount();
+})();
+</script>
+{% endif %}
+
+{% endblock %}

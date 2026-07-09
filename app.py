@@ -444,6 +444,54 @@ def plant_log_delete(plant_id, log_id):
     return redirect(url_for('plant_detail', plant_id=plant_id))
 
 
+# ── Bulk Watering ─────────────────────────────────────────────────────────────
+
+@app.route('/water_all', methods=['GET', 'POST'])
+@login_required
+def water_all():
+    db = get_db()
+    plants = db.execute('SELECT * FROM plants WHERE archived=0 ORDER BY id').fetchall()
+    today_str = date.today().isoformat()
+
+    if request.method == 'POST':
+        selected_ids = set(request.form.getlist('plant_ids'))
+        watered, skipped = [], []
+        for plant in plants:
+            if str(plant['id']) not in selected_ids:
+                continue
+            already = db.execute(
+                "SELECT 1 FROM care_logs WHERE plant_id=? AND action='water' AND logged_at=?",
+                (plant['id'], today_str)
+            ).fetchone()
+            if already:
+                skipped.append(plant['name'])
+                continue
+            db.execute(
+                'INSERT INTO care_logs (plant_id, action, user_id, logged_at, comment) VALUES (?,?,?,?,?)',
+                (plant['id'], 'water', session['user_id'], today_str, '')
+            )
+            watered.append(plant['name'])
+        db.commit()
+
+        if watered:
+            flash(f'{len(watered)}件の水やりを記録しました！（' + '、'.join(watered) + '）', 'success')
+        if skipped:
+            flash(f'{len(skipped)}件は本日すでに記録済みのためスキップしました。（' + '、'.join(skipped) + '）', 'warning')
+        if not watered and not skipped:
+            flash('選択された植物がありませんでした。', 'warning')
+        return redirect(url_for('water_all'))
+
+    rows = []
+    for plant in plants:
+        already = db.execute(
+            "SELECT 1 FROM care_logs WHERE plant_id=? AND action='water' AND logged_at=?",
+            (plant['id'], today_str)
+        ).fetchone()
+        rows.append({'plant': plant, 'done_today': bool(already)})
+
+    return render_template('water_all.html', rows=rows)
+
+
 # ── Season ────────────────────────────────────────────────────────────────────
 
 @app.route('/season', methods=['POST'])
