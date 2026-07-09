@@ -16,6 +16,7 @@ DB = os.path.join(BASE_DIR, 'data', 'plants.db')
 UPLOAD_DIR = os.path.join(BASE_DIR, 'static', 'uploads')
 ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 PORT = 5002
+DEFAULT_LOGIN_URL = 'https://fujimaki.pythonanywhere.com/login'
 
 
 def get_or_create_secret_key():
@@ -636,7 +637,7 @@ def history():
 @app.route('/qr')
 @login_required
 def qr_code():
-    login_url = request.args.get('url') or url_for('login', _external=True)
+    login_url = request.args.get('url') or DEFAULT_LOGIN_URL
     qr_img = qrcode.make(login_url)
     buf = io.BytesIO()
     qr_img.save(buf, format='PNG')
