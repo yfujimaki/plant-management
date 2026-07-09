@@ -11,32 +11,20 @@
       印刷して植物の近くに貼っておくと便利です。
     </p>
 
-    <div id="qrcode" class="d-flex justify-content-center my-3"></div>
+    <div class="d-flex justify-content-center my-3">
+      <img src="data:image/png;base64,{{ qr_data }}" width="220" height="220" alt="ログイン用QRコード">
+    </div>
 
-    <div class="input-group mb-2" style="max-width:420px;margin:0 auto;">
-      <input type="text" id="qrUrl" class="form-control form-control-sm" value="{{ login_url }}">
-      <button class="btn btn-outline-secondary btn-sm" type="button" id="regenBtn">
+    <form method="GET" class="input-group mb-2" style="max-width:420px;margin:0 auto;">
+      <input type="text" name="url" class="form-control form-control-sm" value="{{ login_url }}">
+      <button class="btn btn-outline-secondary btn-sm" type="submit">
         <i class="bi bi-arrow-clockwise"></i> 更新
       </button>
-    </div>
+    </form>
     <div class="form-text">
       スマホがこのURLにアクセスできない場合は、社内Wi-Fiに接続しているか、上のアドレスが正しいかご確認ください。
     </div>
   </div>
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>
-  const qrEl = document.getElementById('qrcode');
-  const urlInput = document.getElementById('qrUrl');
-
-  function renderQR(text) {
-    qrEl.innerHTML = '';
-    new QRCode(qrEl, { text: text, width: 220, height: 220 });
-  }
-
-  renderQR(urlInput.value);
-  document.getElementById('regenBtn').addEventListener('click', () => renderQR(urlInput.value));
-</script>
 
 {% endblock %}

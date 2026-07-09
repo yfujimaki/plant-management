@@ -1,9 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import sqlite3
+import base64
 import hashlib
+import io
 import os
 import secrets
 import uuid
+import qrcode
 from datetime import date, timedelta
 from functools import wraps
 from werkzeug.utils import secure_filename
@@ -633,8 +636,12 @@ def history():
 @app.route('/qr')
 @login_required
 def qr_code():
-    login_url = url_for('login', _external=True)
-    return render_template('qr.html', login_url=login_url)
+    login_url = request.args.get('url') or url_for('login', _external=True)
+    qr_img = qrcode.make(login_url)
+    buf = io.BytesIO()
+    qr_img.save(buf, format='PNG')
+    qr_data = base64.b64encode(buf.getvalue()).decode('ascii')
+    return render_template('qr.html', login_url=login_url, qr_data=qr_data)
 
 
 # ── User Management (Admin) ───────────────────────────────────────────────────
