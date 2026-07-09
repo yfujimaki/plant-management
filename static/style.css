@@ -78,6 +78,25 @@ body {
   border: 2px solid #fff;
 }
 
+.floor-marker .marker-no {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 3px;
+  border-radius: 9px;
+  background: #212529;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #fff;
+  line-height: 1;
+}
+
 .floor-marker.selected {
   outline: 3px solid #0d6efd;
   outline-offset: 2px;

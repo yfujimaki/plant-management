@@ -41,6 +41,7 @@
       {% for m in markers %}
       <div class="floor-marker {{ 'has-photo' if m.plant.photo else 'bg-' + STATUS_INFO[m.overall][1] }}"
            data-plant-id="{{ m.plant.id }}"
+           data-no="{{ m.no }}"
            data-name="{{ m.plant.name }}"
            data-location="{{ m.plant.location or '配置未設定' }}"
            data-status-label="{{ STATUS_INFO[m.overall][0] }}"
@@ -48,8 +49,9 @@
            data-photo="{{ url_for('static', filename='uploads/' + m.plant.photo) if m.plant.photo else '' }}"
            style="left:{{ m.plant.floor_x }}%; top:{{ m.plant.floor_y }}%;
                   {% if m.plant.photo %}background-image:url('{{ url_for('static', filename='uploads/' + m.plant.photo) }}');{% endif %}"
-           title="{{ m.plant.name }}">
+           title="No.{{ m.no }} {{ m.plant.name }}">
         {% if not m.plant.photo %}{{ m.plant.name[:1] }}{% endif %}
+        <span class="marker-no">{{ m.no }}</span>
         <span class="status-dot bg-{{ STATUS_INFO[m.overall][1] }}"></span>
       </div>
       {% endfor %}
@@ -65,7 +67,7 @@
       <i class="bi bi-flower3 fs-4"></i>
     </div>
     <div class="flex-grow-1 overflow-hidden">
-      <div class="fw-semibold text-truncate" id="infoName"></div>
+      <div class="fw-semibold text-truncate"><span class="badge bg-secondary me-1" id="infoNo"></span><span id="infoName"></span></div>
       <div class="small text-muted text-truncate" id="infoLocation"></div>
       <span class="badge mt-1" id="infoStatus"></span>
     </div>
@@ -85,7 +87,7 @@
   {% for p in unplaced %}
   <button type="button" class="btn btn-sm btn-outline-secondary unplaced-item"
           data-plant-id="{{ p.id }}">
-    <i class="bi bi-flower3 me-1"></i>{{ p.name }}
+    <i class="bi bi-flower3 me-1"></i>No.{{ numbers[p.id] }} {{ p.name }}
   </button>
   {% endfor %}
 </div>
@@ -133,12 +135,14 @@
   const infoCard = document.getElementById('infoCard');
   const infoPhoto = document.getElementById('infoPhoto');
   const infoPhotoPlaceholder = document.getElementById('infoPhotoPlaceholder');
+  const infoNo = document.getElementById('infoNo');
   const infoName = document.getElementById('infoName');
   const infoLocation = document.getElementById('infoLocation');
   const infoStatus = document.getElementById('infoStatus');
   const infoLink = document.getElementById('infoLink');
 
   function showInfo(marker) {
+    infoNo.textContent = 'No.' + marker.dataset.no;
     infoName.textContent = marker.dataset.name;
     infoLocation.textContent = marker.dataset.location;
     infoStatus.textContent = marker.dataset.statusLabel;

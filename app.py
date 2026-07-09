@@ -531,6 +531,8 @@ def floorplan():
     today = date.today()
     image = get_setting(db, 'floorplan_image')
     plants = db.execute('SELECT * FROM plants WHERE archived=0 ORDER BY name').fetchall()
+    by_registration = db.execute('SELECT id FROM plants WHERE archived=0 ORDER BY id').fetchall()
+    numbers = {row['id']: i + 1 for i, row in enumerate(by_registration)}
 
     markers = []
     unplaced = []
@@ -539,9 +541,10 @@ def floorplan():
             unplaced.append(plant)
         else:
             statuses = plant_status(db, plant, season, today)
-            markers.append({'plant': plant, 'overall': overall_status(statuses)})
+            markers.append({'plant': plant, 'overall': overall_status(statuses), 'no': numbers[plant['id']]})
 
-    return render_template('floorplan.html', floorplan_image=image, markers=markers, unplaced=unplaced)
+    return render_template('floorplan.html', floorplan_image=image, markers=markers,
+                            unplaced=unplaced, numbers=numbers)
 
 
 @app.route('/floorplan/upload', methods=['POST'])
