@@ -612,8 +612,11 @@ def history():
     date_list = [start + timedelta(days=i) for i in range(days)]
 
     plants = db.execute('SELECT * FROM plants WHERE archived=0 ORDER BY name').fetchall()
+    by_registration = db.execute('SELECT id FROM plants WHERE archived=0 ORDER BY id').fetchall()
+    numbers = {row['id']: i + 1 for i, row in enumerate(by_registration)}
+
     logs = db.execute('''
-        SELECT cl.plant_id, cl.action, cl.logged_at, u.display_name
+        SELECT cl.id, cl.plant_id, cl.action, cl.logged_at, u.display_name
         FROM care_logs cl JOIN users u ON cl.user_id = u.id
         WHERE cl.logged_at >= ?
     ''', (start.isoformat(),)).fetchall()
@@ -621,12 +624,12 @@ def history():
     grid = {}
     for l in logs:
         key = (l['plant_id'], l['logged_at'])
-        grid.setdefault(key, []).append({'action': l['action'], 'by': l['display_name']})
+        grid.setdefault(key, []).append({'id': l['id'], 'action': l['action'], 'by': l['display_name']})
 
     rows = []
     for p in plants:
         cells = [grid.get((p['id'], d.isoformat()), []) for d in date_list]
-        rows.append({'plant': p, 'cells': cells})
+        rows.append({'plant': p, 'cells': cells, 'no': numbers[p['id']]})
 
     return render_template('history.html', rows=rows, date_list=date_list, days=days,
                             weekday_ja=WEEKDAY_JA)

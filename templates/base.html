@@ -71,7 +71,7 @@
 </nav>
 {% endif %}
 
-<div class="{% if session.user_id %}container-fluid mt-3 px-3 pb-5{% endif %}">
+<div class="{% if session.user_id %}container-fluid mt-3 px-3 app-content{% endif %}">
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for cat, msg in messages %}

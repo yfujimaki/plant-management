@@ -170,6 +170,11 @@ body {
   margin: 0 1px;
 }
 
+.history-icon-btn {
+  cursor: pointer;
+  padding: 4px;
+}
+
 /* レスポンシブ調整 */
 @media (max-width: 768px) {
   .container-fluid { padding-left: 10px; padding-right: 10px; }
@@ -177,4 +182,12 @@ body {
 }
 
 /* 下部固定ナビの分だけ余白 */
-body { padding-bottom: 0; }
+.app-content {
+  padding-bottom: 3rem;
+}
+
+@media (max-width: 767.98px) {
+  .app-content {
+    padding-bottom: 100px;
+  }
+}

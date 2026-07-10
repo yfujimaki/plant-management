@@ -39,16 +39,21 @@
       <tr>
         <td class="plant-col">
           <a href="{{ url_for('plant_detail', plant_id=row.plant.id) }}" class="text-decoration-none text-dark">
-            {{ row.plant.name }}
+            <span class="badge bg-secondary me-1">{{ row.no }}</span>{{ row.plant.name }}
           </a>
         </td>
         {% for entries in row.cells %}
         {% set d = date_list[loop.index0] %}
         <td class="{{ 'weekend' if d.weekday() >= 5 else '' }} {{ 'today-col' if d == date_list[-1] else '' }}">
           {% for e in entries %}
-          <i class="bi {{ ACTIONS[e.action].icon }} history-icon
+          <i class="bi {{ ACTIONS[e.action].icon }} history-icon history-icon-btn
              {{ 'text-primary' if e.action == 'water' else ('text-success' if e.action == 'fertilize' else 'text-warning') }}"
-             title="{{ ACTIONS[e.action].label }}（{{ e.by }}）"></i>
+             data-log-id="{{ e.id }}"
+             data-plant-id="{{ row.plant.id }}"
+             data-plant-name="{{ row.plant.name }}"
+             data-action-label="{{ ACTIONS[e.action].label }}"
+             data-date="{{ d.month }}/{{ d.day }}"
+             data-by="{{ e.by }}"></i>
           {% endfor %}
         </td>
         {% endfor %}
@@ -57,13 +62,49 @@
     </tbody>
   </table>
 </div>
-<p class="small text-muted mt-2">アイコンにカーソルを合わせる（スマホは長押し）と、誰が対応したか表示されます。</p>
+<p class="small text-muted mt-2">アイコンをタップすると、詳細の確認と記録の取り消しができます。</p>
+
+<div id="historyInfoCard" class="card mb-4 d-none">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <div class="fw-semibold" id="hiPlant"></div>
+        <div class="small text-muted" id="hiDetail"></div>
+      </div>
+      <button type="button" class="btn-close" id="hiClose" aria-label="閉じる"></button>
+    </div>
+    <form method="POST" id="hiDeleteForm" class="mt-2"
+          onsubmit="return confirm('この記録を取り消しますか？');">
+      <button type="submit" class="btn btn-sm btn-outline-danger">
+        <i class="bi bi-arrow-counterclockwise me-1"></i>この記録を取り消す
+      </button>
+    </form>
+  </div>
+</div>
 {% endif %}
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     var wrap = document.querySelector('.history-table-wrap');
     if (wrap) wrap.scrollLeft = wrap.scrollWidth;
+
+    var card = document.getElementById('historyInfoCard');
+    var hiPlant = document.getElementById('hiPlant');
+    var hiDetail = document.getElementById('hiDetail');
+    var hiForm = document.getElementById('hiDeleteForm');
+
+    document.querySelectorAll('.history-icon-btn').forEach(function (icon) {
+      icon.addEventListener('click', function () {
+        hiPlant.textContent = icon.dataset.plantName;
+        hiDetail.textContent = icon.dataset.date + '　' + icon.dataset.actionLabel + '（' + icon.dataset.by + '）';
+        hiForm.action = '/plants/' + icon.dataset.plantId + '/log/' + icon.dataset.logId + '/delete';
+        card.classList.remove('d-none');
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    });
+    document.getElementById('hiClose').addEventListener('click', function () {
+      card.classList.add('d-none');
+    });
   });
 </script>
 
