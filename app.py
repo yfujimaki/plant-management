@@ -522,6 +522,39 @@ def water_all():
     return render_template('water_all.html', rows=rows, today=today_str)
 
 
+@app.route('/bulk_undo', methods=['GET', 'POST'])
+@login_required
+def bulk_undo():
+    db = get_db()
+
+    if request.method == 'POST':
+        target_date, _ = parse_log_date(request.form.get('log_date'))
+        target_date_str = target_date.isoformat()
+        log_ids = request.form.getlist('log_ids')
+        if log_ids:
+            db.executemany('DELETE FROM care_logs WHERE id=?', [(i,) for i in log_ids])
+            db.commit()
+            flash(f'{len(log_ids)}件の記録を取り消しました。', 'success')
+        else:
+            flash('選択された記録がありませんでした。', 'warning')
+        return redirect(url_for('bulk_undo', date=target_date_str))
+
+    target_date, _ = parse_log_date(request.args.get('date'))
+    target_date_str = target_date.isoformat()
+
+    logs = db.execute('''
+        SELECT cl.id, cl.action, cl.plant_id, p.name AS plant_name, u.display_name
+        FROM care_logs cl
+        JOIN plants p ON cl.plant_id = p.id
+        JOIN users u ON cl.user_id = u.id
+        WHERE cl.logged_at = ?
+        ORDER BY p.name, cl.action
+    ''', (target_date_str,)).fetchall()
+
+    return render_template('bulk_undo.html', logs=logs, target_date=target_date_str,
+                            today=date.today().isoformat())
+
+
 # ── Season ────────────────────────────────────────────────────────────────────
 
 @app.route('/season', methods=['POST'])

@@ -29,7 +29,9 @@
         <th class="plant-col">植物名</th>
         {% for d in date_list %}
         <th class="{{ 'weekend' if d.weekday() >= 5 else '' }} {{ 'today-col' if d == date_list[-1] else '' }}">
-          {{ d.month }}/{{ d.day }}<br>{{ weekday_ja[d.weekday()] }}
+          <a href="{{ url_for('bulk_undo', date=d.isoformat()) }}" class="text-decoration-none text-reset" title="この日の記録を一括取り消し">
+            {{ d.month }}/{{ d.day }}<br>{{ weekday_ja[d.weekday()] }}
+          </a>
         </th>
         {% endfor %}
       </tr>
