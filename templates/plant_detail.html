@@ -55,17 +55,18 @@
           （{% if action == 'water' %}周期{{ s.interval }}日{% else %}周期約{{ s.interval }}日{% endif %}）
           {% if action == 'fertilize' and plant.fertilize_note %}<br>{{ plant.fertilize_note }}{% endif %}
         </div>
+        {% if s.done_today %}
+        <div class="small text-success mb-2">
+          <i class="bi bi-check-circle-fill me-1"></i>本日実施済み{% if s.last_by %}（{{ s.last_by }}）{% endif %}
+        </div>
+        {% endif %}
         <form method="POST" action="{{ url_for('plant_log', plant_id=plant.id) }}">
           <input type="hidden" name="action" value="{{ action }}">
-          {% if s.done_today %}
-          <button type="button" class="btn btn-secondary w-100 care-btn" disabled>
-            <i class="bi bi-check-circle-fill me-1"></i>本日実施済み{% if s.last_by %}（{{ s.last_by }}）{% endif %}
-          </button>
-          {% else %}
+          <input type="date" name="log_date" class="form-control form-control-sm mb-2"
+                 value="{{ today.isoformat() }}" max="{{ today.isoformat() }}">
           <button type="submit" class="btn btn-success w-100 care-btn">
             <i class="bi bi-check2 me-1"></i>{{ meta.label }}を記録
           </button>
-          {% endif %}
         </form>
         {% if s.done_today %}
         <form method="POST" action="{{ url_for('plant_log_delete', plant_id=plant.id, log_id=s.last_id) }}"

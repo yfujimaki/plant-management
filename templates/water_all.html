@@ -5,13 +5,20 @@
 <h5 class="fw-bold mb-3"><i class="bi bi-droplet-fill me-2 text-primary"></i>一括水やり</h5>
 
 <p class="small text-muted mb-3">
-  すべての植物にチェックが入っています。水やりしないものだけチェックを外してから、下のボタンを押してください。
+  すべての植物にチェックが入っています。水やりしないものだけチェックを外してから、下のボタンを押してください。<br>
+  昨日など、当日以外の分を後から記録したい場合は「実施日」を変更してください。
 </p>
 
 {% if not rows %}
 <div class="card"><div class="card-body text-center text-muted py-5">植物が登録されていません。</div></div>
 {% else %}
 <form method="POST">
+  <div class="mb-3">
+    <label class="form-label small fw-semibold mb-1">実施日</label>
+    <input type="date" name="log_date" class="form-control form-control-sm" style="max-width:200px;"
+           value="{{ today }}" max="{{ today }}">
+  </div>
+
   <div class="d-flex justify-content-between align-items-center mb-2">
     <div class="btn-group btn-group-sm">
       <button type="button" id="selectAll" class="btn btn-outline-secondary">すべて選択</button>
@@ -24,7 +31,7 @@
     {% for row in rows %}
     <label class="list-group-item d-flex align-items-center gap-3 {{ 'bg-light text-muted' if row.done_today }}">
       <input type="checkbox" name="plant_ids" value="{{ row.plant.id }}" class="form-check-input flex-shrink-0 water-check"
-             {% if not row.done_today %}checked{% endif %} {% if row.done_today %}disabled{% endif %}>
+             {% if not row.done_today %}checked{% endif %}>
       <span class="badge bg-secondary flex-shrink-0" style="width:2rem;">{{ loop.index }}</span>
       {% if row.plant.photo %}
       <img src="{{ url_for('static', filename='uploads/' + row.plant.photo) }}" class="rounded flex-shrink-0"

@@ -110,6 +110,18 @@ def plant_status(db, plant, season, today):
     return result
 
 
+def parse_log_date(value):
+    if not value:
+        return date.today(), None
+    try:
+        d = date.fromisoformat(value)
+    except ValueError:
+        return date.today(), '日付の形式が正しくないため、本日の日付を使用しました。'
+    if d > date.today():
+        return date.today(), '未来の日付は指定できないため、本日の日付を使用しました。'
+    return d, None
+
+
 def overall_status(status_map):
     order = {'overdue': 0, 'soon': 1, 'ok': 2}
     worst = min(status_map.values(), key=lambda s: order[s['status']])
@@ -398,7 +410,7 @@ def plant_detail(plant_id):
         WHERE cl.plant_id = ? ORDER BY cl.logged_at DESC, cl.id DESC LIMIT 30
     ''', (plant_id,)).fetchall()
 
-    return render_template('plant_detail.html', plant=plant, statuses=statuses, history=history)
+    return render_template('plant_detail.html', plant=plant, statuses=statuses, history=history, today=today)
 
 
 @app.route('/plants/<int:plant_id>/log', methods=['POST'])
@@ -415,21 +427,28 @@ def plant_log(plant_id):
         flash('不正な操作です。', 'danger')
         return redirect(url_for('plant_detail', plant_id=plant_id))
 
-    today_str = date.today().isoformat()
+    log_date, date_warning = parse_log_date(request.form.get('log_date'))
+    if date_warning:
+        flash(date_warning, 'warning')
+    log_date_str = log_date.isoformat()
+
     already = db.execute(
         "SELECT 1 FROM care_logs WHERE plant_id=? AND action=? AND logged_at=?",
-        (plant_id, action, today_str)
+        (plant_id, action, log_date_str)
     ).fetchone()
     if already:
-        flash(f'「{ACTIONS[action]["label"]}」は本日すでに記録済みです。', 'warning')
+        flash(f'「{ACTIONS[action]["label"]}」は{log_date_str}分すでに記録済みです。', 'warning')
         return redirect(url_for('plant_detail', plant_id=plant_id))
 
     db.execute(
         'INSERT INTO care_logs (plant_id, action, user_id, logged_at, comment) VALUES (?,?,?,?,?)',
-        (plant_id, action, session['user_id'], today_str, request.form.get('comment', ''))
+        (plant_id, action, session['user_id'], log_date_str, request.form.get('comment', ''))
     )
     db.commit()
-    flash(f'{ACTIONS[action]["label"]}を記録しました！', 'success')
+    if log_date == date.today():
+        flash(f'{ACTIONS[action]["label"]}を記録しました！', 'success')
+    else:
+        flash(f'{ACTIONS[action]["label"]}を{log_date_str}分として記録しました！', 'success')
     return redirect(url_for('plant_detail', plant_id=plant_id))
 
 
@@ -455,9 +474,15 @@ def plant_log_delete(plant_id, log_id):
 def water_all():
     db = get_db()
     plants = db.execute('SELECT * FROM plants WHERE archived=0 ORDER BY id').fetchall()
-    today_str = date.today().isoformat()
+    today = date.today()
+    today_str = today.isoformat()
 
     if request.method == 'POST':
+        log_date, date_warning = parse_log_date(request.form.get('log_date'))
+        if date_warning:
+            flash(date_warning, 'warning')
+        log_date_str = log_date.isoformat()
+
         selected_ids = set(request.form.getlist('plant_ids'))
         watered, skipped = [], []
         for plant in plants:
@@ -465,22 +490,23 @@ def water_all():
                 continue
             already = db.execute(
                 "SELECT 1 FROM care_logs WHERE plant_id=? AND action='water' AND logged_at=?",
-                (plant['id'], today_str)
+                (plant['id'], log_date_str)
             ).fetchone()
             if already:
                 skipped.append(plant['name'])
                 continue
             db.execute(
                 'INSERT INTO care_logs (plant_id, action, user_id, logged_at, comment) VALUES (?,?,?,?,?)',
-                (plant['id'], 'water', session['user_id'], today_str, '')
+                (plant['id'], 'water', session['user_id'], log_date_str, '')
             )
             watered.append(plant['name'])
         db.commit()
 
+        date_note = '' if log_date == today else f'（{log_date_str}分として）'
         if watered:
-            flash(f'{len(watered)}件の水やりを記録しました！（' + '、'.join(watered) + '）', 'success')
+            flash(f'{len(watered)}件の水やりを記録しました{date_note}！（' + '、'.join(watered) + '）', 'success')
         if skipped:
-            flash(f'{len(skipped)}件は本日すでに記録済みのためスキップしました。（' + '、'.join(skipped) + '）', 'warning')
+            flash(f'{len(skipped)}件は{log_date_str}分ですでに記録済みのためスキップしました。（' + '、'.join(skipped) + '）', 'warning')
         if not watered and not skipped:
             flash('選択された植物がありませんでした。', 'warning')
         return redirect(url_for('water_all'))
@@ -493,7 +519,7 @@ def water_all():
         ).fetchone()
         rows.append({'plant': plant, 'done_today': bool(already)})
 
-    return render_template('water_all.html', rows=rows)
+    return render_template('water_all.html', rows=rows, today=today_str)
 
 
 # ── Season ────────────────────────────────────────────────────────────────────
