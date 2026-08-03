@@ -175,6 +175,19 @@ body {
   padding: 4px;
 }
 
+.history-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin: 0 1px;
+  cursor: pointer;
+  font-size: 0.65rem;
+  border: 1px solid rgba(0,0,0,0.15);
+}
+
 /* レスポンシブ調整 */
 @media (max-width: 768px) {
   .container-fluid { padding-left: 10px; padding-right: 10px; }

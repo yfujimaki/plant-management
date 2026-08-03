@@ -7,10 +7,11 @@
 <div class="card mb-4">
   <div class="table-responsive">
     <table class="table mb-0 align-middle">
-      <thead><tr><th>ユーザー名</th><th>表示名</th><th>役割</th><th>状態</th><th></th></tr></thead>
+      <thead><tr><th>色</th><th>ユーザー名</th><th>表示名</th><th>役割</th><th>状態</th><th></th></tr></thead>
       <tbody>
         {% for u in users %}
         <tr class="{{ 'text-muted' if not u.active }}">
+          <td><span class="d-inline-block rounded-circle" style="width:20px;height:20px;background:{{ u.color or DEFAULT_USER_COLOR }};border:1px solid #ccc;"></span></td>
           <td>{{ u.username }}</td>
           <td>{{ u.display_name }}</td>
           <td><span class="badge bg-secondary">{{ ROLES[u.role] }}</span></td>
@@ -45,29 +46,32 @@
           </td>
         </tr>
         <tr class="collapse" id="edit{{ u.id }}">
-          <td colspan="5">
+          <td colspan="6">
             <form method="POST" action="{{ url_for('user_edit', user_id=u.id) }}" class="row g-2">
+              <div class="col-6 col-md-2">
+                <input type="color" name="color" class="form-control form-control-sm form-control-color w-100" value="{{ u.color or DEFAULT_USER_COLOR }}">
+              </div>
               <div class="col-12 col-md-3">
                 <input type="text" name="username" class="form-control form-control-sm" value="{{ u.username }}" required>
               </div>
               <div class="col-12 col-md-3">
                 <input type="text" name="display_name" class="form-control form-control-sm" value="{{ u.display_name }}" required>
               </div>
-              <div class="col-8 col-md-3">
+              <div class="col-8 col-md-2">
                 <select name="role" class="form-select form-select-sm">
                   {% for key, label in ROLES.items() %}
                   <option value="{{ key }}" {{ 'selected' if key == u.role else '' }}>{{ label }}</option>
                   {% endfor %}
                 </select>
               </div>
-              <div class="col-4 col-md-3">
+              <div class="col-4 col-md-2">
                 <button type="submit" class="btn btn-sm btn-primary w-100">保存</button>
               </div>
             </form>
           </td>
         </tr>
         <tr class="collapse" id="reset{{ u.id }}">
-          <td colspan="5">
+          <td colspan="6">
             <form method="POST" action="{{ url_for('user_reset', user_id=u.id) }}" class="d-flex gap-2">
               <input type="password" name="password" class="form-control form-control-sm" placeholder="新しいパスワード" required>
               <button type="submit" class="btn btn-sm btn-primary">設定</button>
@@ -84,6 +88,9 @@
   <div class="card-header fw-semibold"><i class="bi bi-person-plus me-1"></i>新規ユーザー追加</div>
   <div class="card-body">
     <form method="POST" action="{{ url_for('user_new') }}" class="row g-2">
+      <div class="col-4 col-md-1">
+        <input type="color" name="color" class="form-control form-control-color w-100" value="{{ DEFAULT_USER_COLOR }}">
+      </div>
       <div class="col-12 col-md-3">
         <input type="text" name="username" class="form-control" placeholder="ユーザー名" required>
       </div>
@@ -93,7 +100,7 @@
       <div class="col-12 col-md-3">
         <input type="password" name="password" class="form-control" placeholder="パスワード" required>
       </div>
-      <div class="col-8 col-md-2">
+      <div class="col-8 col-md-1">
         <select name="role" class="form-select">
           {% for key, label in ROLES.items() %}
           <option value="{{ key }}">{{ label }}</option>

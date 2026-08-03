@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS users (
     display_name TEXT NOT NULL,
     password     TEXT NOT NULL,
     role         TEXT NOT NULL DEFAULT 'member',
-    active       INTEGER NOT NULL DEFAULT 1
+    active       INTEGER NOT NULL DEFAULT 1,
+    color        TEXT NOT NULL DEFAULT '#6c757d'
 );
 
 CREATE TABLE IF NOT EXISTS plants (
@@ -75,6 +76,12 @@ except Exception:
     pass
 try:
     c.execute("ALTER TABLE plants ADD COLUMN floor_y REAL")
+except Exception:
+    pass
+
+# color カラムが未存在の場合に追加（既存DB対応）
+try:
+    c.execute("ALTER TABLE users ADD COLUMN color TEXT NOT NULL DEFAULT '#6c757d'")
 except Exception:
     pass
 

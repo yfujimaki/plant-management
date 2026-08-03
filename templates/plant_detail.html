@@ -45,7 +45,10 @@
         </div>
         <div class="small text-muted mb-1">
           {% if s.last_date %}
-          前回: {{ s.last_date.strftime('%m/%d') }}{% if s.last_by %}（{{ s.last_by }}）{% endif %}
+          前回: {{ s.last_date.strftime('%m/%d') }}
+          {% if s.last_by %}
+          <span class="badge" style="background:{{ s.last_color or DEFAULT_USER_COLOR }};color:{{ contrast_text_color(s.last_color or DEFAULT_USER_COLOR) }};">{{ s.last_by }}</span>
+          {% endif %}
           {% else %}
           記録なし
           {% endif %}
@@ -57,7 +60,10 @@
         </div>
         {% if s.done_today %}
         <div class="small text-success mb-2">
-          <i class="bi bi-check-circle-fill me-1"></i>本日実施済み{% if s.last_by %}（{{ s.last_by }}）{% endif %}
+          <i class="bi bi-check-circle-fill me-1"></i>本日実施済み
+          {% if s.last_by %}
+          <span class="badge" style="background:{{ s.last_color or DEFAULT_USER_COLOR }};color:{{ contrast_text_color(s.last_color or DEFAULT_USER_COLOR) }};">{{ s.last_by }}</span>
+          {% endif %}
         </div>
         {% endif %}
         <form method="POST" action="{{ url_for('plant_log', plant_id=plant.id) }}">
@@ -94,7 +100,10 @@
       {% if h.comment %}<span class="text-muted small">— {{ h.comment }}</span>{% endif %}
     </div>
     <div class="d-flex align-items-center gap-2">
-      <div class="text-muted small text-end">{{ h.logged_at }}<br>{{ h.display_name }}</div>
+      <div class="text-muted small text-end">
+        {{ h.logged_at }}<br>
+        <span class="badge" style="background:{{ h.color or DEFAULT_USER_COLOR }};color:{{ contrast_text_color(h.color or DEFAULT_USER_COLOR) }};">{{ h.display_name }}</span>
+      </div>
       <form method="POST" action="{{ url_for('plant_log_delete', plant_id=plant.id, log_id=h.id) }}"
             onsubmit="return confirm('この記録を削除しますか？');">
         <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1" title="この記録を削除">

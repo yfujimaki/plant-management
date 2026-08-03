@@ -14,9 +14,16 @@
 </div>
 
 <div class="d-flex flex-wrap gap-3 small text-muted mb-2">
-  <span><i class="bi bi-droplet-fill text-primary me-1"></i>水やり</span>
-  <span><i class="bi bi-flower1 text-success me-1"></i>肥料</span>
-  <span><i class="bi bi-arrow-repeat text-warning me-1"></i>土の入れ替え</span>
+  <span><i class="bi bi-droplet-fill me-1"></i>水やり</span>
+  <span><i class="bi bi-flower1 me-1"></i>肥料</span>
+  <span><i class="bi bi-arrow-repeat me-1"></i>土の入れ替え</span>
+  <span class="text-muted">｜アイコンの色＝担当者</span>
+</div>
+
+<div class="d-flex flex-wrap gap-2 small mb-3">
+  {% for u in users %}
+  <span class="badge" style="background:{{ u.color or DEFAULT_USER_COLOR }};color:{{ contrast_text_color(u.color or DEFAULT_USER_COLOR) }};">{{ u.display_name }}</span>
+  {% endfor %}
 </div>
 
 {% if not rows %}
@@ -48,14 +55,15 @@
         {% set d = date_list[loop.index0] %}
         <td class="{{ 'weekend' if d.weekday() >= 5 else '' }} {{ 'today-col' if d == date_list[-1] else '' }}">
           {% for e in entries %}
-          <i class="bi {{ ACTIONS[e.action].icon }} history-icon history-icon-btn
-             {{ 'text-primary' if e.action == 'water' else ('text-success' if e.action == 'fertilize' else 'text-warning') }}"
+          <span class="history-dot history-icon-btn" style="background:{{ e.color or DEFAULT_USER_COLOR }};"
              data-log-id="{{ e.id }}"
              data-plant-id="{{ row.plant.id }}"
              data-plant-name="{{ row.plant.name }}"
              data-action-label="{{ ACTIONS[e.action].label }}"
              data-date="{{ d.month }}/{{ d.day }}"
-             data-by="{{ e.by }}"></i>
+             data-by="{{ e.by }}">
+            <i class="bi {{ ACTIONS[e.action].icon }}" style="color:{{ contrast_text_color(e.color or DEFAULT_USER_COLOR) }};"></i>
+          </span>
           {% endfor %}
         </td>
         {% endfor %}

@@ -40,6 +40,20 @@ ROLES = {
     'admin':  '管理者',
 }
 
+DEFAULT_USER_COLOR = '#6c757d'
+
+
+def contrast_text_color(hex_color):
+    hex_color = (hex_color or '').lstrip('#')
+    if len(hex_color) != 6:
+        return '#ffffff'
+    try:
+        r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
+    except ValueError:
+        return '#ffffff'
+    luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+    return '#000000' if luminance > 0.6 else '#ffffff'
+
 ACTIONS = {
     'water':     {'label': '水やり',   'icon': 'bi-droplet-fill',  'soon_days': 1},
     'fertilize': {'label': '肥料',     'icon': 'bi-flower1',       'soon_days': 7},
@@ -74,7 +88,7 @@ def water_interval(plant, season):
 
 def plant_status(db, plant, season, today):
     logs = db.execute('''
-        SELECT cl.*, u.display_name FROM care_logs cl
+        SELECT cl.*, u.display_name, u.color FROM care_logs cl
         JOIN users u ON cl.user_id = u.id
         WHERE cl.plant_id = ? ORDER BY cl.logged_at DESC, cl.id DESC
     ''', (plant['id'],)).fetchall()
@@ -86,9 +100,11 @@ def plant_status(db, plant, season, today):
         if last:
             last_date = date.fromisoformat(last['logged_at'])
             last_by = last['display_name']
+            last_color = last['color']
         else:
             last_date = date.fromisoformat(plant['created_at'][:10])
             last_by = None
+            last_color = None
         next_due = last_date + timedelta(days=interval)
         days_left = (next_due - today).days
         if days_left < 0:
@@ -101,6 +117,7 @@ def plant_status(db, plant, season, today):
             'interval': interval,
             'last_date': last_date if last else None,
             'last_by': last_by,
+            'last_color': last_color,
             'last_id': last['id'] if last else None,
             'next_due': next_due,
             'days_left': days_left,
@@ -152,7 +169,10 @@ def admin_required(f):
 def inject_globals():
     db = get_db()
     season = get_season(db)
-    return {'ROLES': ROLES, 'ACTIONS': ACTIONS, 'STATUS_INFO': STATUS_INFO, 'current_season': season}
+    return {
+        'ROLES': ROLES, 'ACTIONS': ACTIONS, 'STATUS_INFO': STATUS_INFO, 'current_season': season,
+        'contrast_text_color': contrast_text_color, 'DEFAULT_USER_COLOR': DEFAULT_USER_COLOR,
+    }
 
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
@@ -405,7 +425,7 @@ def plant_detail(plant_id):
     statuses = plant_status(db, plant, season, today)
 
     history = db.execute('''
-        SELECT cl.*, u.display_name FROM care_logs cl
+        SELECT cl.*, u.display_name, u.color FROM care_logs cl
         JOIN users u ON cl.user_id = u.id
         WHERE cl.plant_id = ? ORDER BY cl.logged_at DESC, cl.id DESC LIMIT 30
     ''', (plant_id,)).fetchall()
@@ -543,7 +563,7 @@ def bulk_undo():
     target_date_str = target_date.isoformat()
 
     logs = db.execute('''
-        SELECT cl.id, cl.action, cl.plant_id, p.name AS plant_name, u.display_name
+        SELECT cl.id, cl.action, cl.plant_id, p.name AS plant_name, u.display_name, u.color
         FROM care_logs cl
         JOIN plants p ON cl.plant_id = p.id
         JOIN users u ON cl.user_id = u.id
@@ -675,7 +695,7 @@ def history():
     numbers = {row['id']: i + 1 for i, row in enumerate(by_registration)}
 
     logs = db.execute('''
-        SELECT cl.id, cl.plant_id, cl.action, cl.logged_at, u.display_name
+        SELECT cl.id, cl.plant_id, cl.action, cl.logged_at, u.display_name, u.color
         FROM care_logs cl JOIN users u ON cl.user_id = u.id
         WHERE cl.logged_at >= ?
     ''', (start.isoformat(),)).fetchall()
@@ -683,15 +703,21 @@ def history():
     grid = {}
     for l in logs:
         key = (l['plant_id'], l['logged_at'])
-        grid.setdefault(key, []).append({'id': l['id'], 'action': l['action'], 'by': l['display_name']})
+        grid.setdefault(key, []).append({
+            'id': l['id'], 'action': l['action'], 'by': l['display_name'], 'color': l['color'],
+        })
 
     rows = []
     for p in plants:
         cells = [grid.get((p['id'], d.isoformat()), []) for d in date_list]
         rows.append({'plant': p, 'cells': cells, 'no': numbers[p['id']]})
 
+    active_users = db.execute(
+        'SELECT display_name, color FROM users WHERE active=1 ORDER BY display_name'
+    ).fetchall()
+
     return render_template('history.html', rows=rows, date_list=date_list, days=days,
-                            weekday_ja=WEEKDAY_JA)
+                            weekday_ja=WEEKDAY_JA, users=active_users)
 
 
 # ── QR Login ──────────────────────────────────────────────────────────────────
@@ -725,8 +751,9 @@ def user_new():
     db = get_db()
     f = request.form
     try:
-        db.execute('INSERT INTO users (username, display_name, password, role) VALUES (?,?,?,?)',
-                   (f['username'], f['display_name'], hash_pw(f['password']), f.get('role', 'member')))
+        db.execute('INSERT INTO users (username, display_name, password, role, color) VALUES (?,?,?,?,?)',
+                   (f['username'], f['display_name'], hash_pw(f['password']), f.get('role', 'member'),
+                    f.get('color') or DEFAULT_USER_COLOR))
         db.commit()
         flash(f'ユーザー「{f["display_name"]}」を作成しました。', 'success')
     except sqlite3.IntegrityError:
@@ -753,8 +780,9 @@ def user_edit(user_id):
     db = get_db()
     f = request.form
     try:
-        db.execute('UPDATE users SET username=?, display_name=?, role=? WHERE id=?',
-                   (f['username'], f['display_name'], f.get('role', 'member'), user_id))
+        db.execute('UPDATE users SET username=?, display_name=?, role=?, color=? WHERE id=?',
+                   (f['username'], f['display_name'], f.get('role', 'member'),
+                    f.get('color') or DEFAULT_USER_COLOR, user_id))
         db.commit()
         flash('ユーザー情報を更新しました。', 'success')
     except sqlite3.IntegrityError:

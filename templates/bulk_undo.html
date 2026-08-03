@@ -34,13 +34,14 @@
     {% for log in logs %}
     <label class="list-group-item d-flex align-items-center gap-3">
       <input type="checkbox" name="log_ids" value="{{ log.id }}" class="form-check-input flex-shrink-0 undo-check" checked>
-      <i class="bi {{ ACTIONS[log.action].icon }}
-         {{ 'text-primary' if log.action == 'water' else ('text-success' if log.action == 'fertilize' else 'text-warning') }}"></i>
+      <span class="history-dot" style="background:{{ log.color or DEFAULT_USER_COLOR }};">
+        <i class="bi {{ ACTIONS[log.action].icon }}" style="color:{{ contrast_text_color(log.color or DEFAULT_USER_COLOR) }};"></i>
+      </span>
       <span class="flex-grow-1">
         {{ log.plant_name }}
         <span class="badge bg-secondary ms-1">{{ ACTIONS[log.action].label }}</span>
       </span>
-      <span class="small text-muted">{{ log.display_name }}</span>
+      <span class="badge" style="background:{{ log.color or DEFAULT_USER_COLOR }};color:{{ contrast_text_color(log.color or DEFAULT_USER_COLOR) }};">{{ log.display_name }}</span>
     </label>
     {% endfor %}
   </div>
