@@ -85,6 +85,29 @@ def get_season(reference_date=None):
     return 'summer' if d.month in SUMMER_MONTHS else 'winter'
 
 
+# 植物のお世話担当ペア（年, 月）→ (担当者1, 担当者2)
+# 2027年2月以降のペアは未定のため、決まり次第ここに追記してください。
+PAIR_SCHEDULE = {
+    (2026, 8):  ('NAKAZAWA', 'YF158'),
+    (2026, 9):  ('SHIRAISHI', 'TAKANO'),
+    (2026, 10): ('SATO', 'HARUKA'),
+    (2026, 11): ('NAKAZAWA', 'YF158'),
+    (2026, 12): ('SHIRAISHI', 'TAKANO'),
+    (2027, 1):  ('SATO', 'HARUKA'),
+}
+
+
+def get_pair_info(reference_date=None):
+    d = reference_date or date.today()
+    key = (d.year, d.month)
+    pair = PAIR_SCHEDULE.get(key)
+
+    next_key = (d.year + 1, 1) if d.month == 12 else (d.year, d.month + 1)
+    changing_next_month = key in PAIR_SCHEDULE and next_key not in PAIR_SCHEDULE
+
+    return pair, changing_next_month
+
+
 def water_interval(plant, season):
     return plant['water_days_summer'] if season == 'summer' else plant['water_days_winter']
 
@@ -205,7 +228,11 @@ def login():
             return redirect(url_for('dashboard'))
         else:
             flash('登録者またはパスワードが間違っています。', 'danger')
-    return render_template('login.html', users=users)
+
+    pair, changing_next_month = get_pair_info()
+    today = date.today()
+    return render_template('login.html', users=users, pair=pair,
+                            changing_next_month=changing_next_month, current_month=today.month)
 
 
 @app.route('/logout')
