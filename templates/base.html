@@ -16,12 +16,10 @@
     <a class="navbar-brand fw-bold" href="{{ url_for('dashboard') }}">
       <i class="bi bi-flower2 me-2"></i>植物管理
     </a>
-    <form method="POST" action="{{ url_for('set_season') }}" class="d-flex order-md-2 ms-auto me-2">
-      <input type="hidden" name="season" value="{{ 'winter' if current_season == 'summer' else 'summer' }}">
-      <button type="submit" class="btn btn-sm {{ 'btn-warning' if current_season == 'summer' else 'btn-light' }}">
-        {% if current_season == 'summer' %}<i class="bi bi-sun-fill me-1"></i>夏モード{% else %}<i class="bi bi-snow me-1"></i>冬モード{% endif %}
-      </button>
-    </form>
+    <span class="badge order-md-2 ms-auto me-2 {{ 'bg-warning text-dark' if current_season == 'summer' else 'bg-light text-dark' }}"
+          title="4〜10月は夏モード、11〜3月は冬モードに自動で切り替わります">
+      {% if current_season == 'summer' %}<i class="bi bi-sun-fill me-1"></i>夏モード{% else %}<i class="bi bi-snow me-1"></i>冬モード{% endif %}
+    </span>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
       <span class="navbar-toggler-icon"></span>
     </button>

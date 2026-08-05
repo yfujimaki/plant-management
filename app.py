@@ -77,9 +77,12 @@ def hash_pw(pw):
     return hashlib.sha256(pw.encode()).hexdigest()
 
 
-def get_season(db):
-    row = db.execute("SELECT value FROM settings WHERE key='season'").fetchone()
-    return row['value'] if row else 'summer'
+SUMMER_MONTHS = {4, 5, 6, 7, 8, 9, 10}
+
+
+def get_season(reference_date=None):
+    d = reference_date or date.today()
+    return 'summer' if d.month in SUMMER_MONTHS else 'winter'
 
 
 def water_interval(plant, season):
@@ -168,7 +171,7 @@ def admin_required(f):
 @app.context_processor
 def inject_globals():
     db = get_db()
-    season = get_season(db)
+    season = get_season()
     return {
         'ROLES': ROLES, 'ACTIONS': ACTIONS, 'STATUS_INFO': STATUS_INFO, 'current_season': season,
         'contrast_text_color': contrast_text_color, 'DEFAULT_USER_COLOR': DEFAULT_USER_COLOR,
@@ -217,7 +220,7 @@ def logout():
 @login_required
 def dashboard():
     db = get_db()
-    season = get_season(db)
+    season = get_season()
     today = date.today()
     plants = db.execute('SELECT * FROM plants WHERE archived=0 ORDER BY name').fetchall()
 
@@ -238,7 +241,7 @@ def dashboard():
 @login_required
 def plant_list():
     db = get_db()
-    season = get_season(db)
+    season = get_season()
     today = date.today()
     show_archived = request.args.get('archived') == '1'
     plants = db.execute(
@@ -420,7 +423,7 @@ def plant_detail(plant_id):
         flash('植物が見つかりません。', 'warning')
         return redirect(url_for('plant_list'))
 
-    season = get_season(db)
+    season = get_season()
     today = date.today()
     statuses = plant_status(db, plant, season, today)
 
@@ -575,23 +578,6 @@ def bulk_undo():
                             today=date.today().isoformat())
 
 
-# ── Season ────────────────────────────────────────────────────────────────────
-
-@app.route('/season', methods=['POST'])
-@login_required
-def set_season():
-    season = request.form.get('season')
-    if season not in ('summer', 'winter'):
-        flash('不正な設定です。', 'danger')
-        return redirect(request.referrer or url_for('dashboard'))
-    db = get_db()
-    db.execute("UPDATE settings SET value=? WHERE key='season'", (season,))
-    db.commit()
-    label = '夏モード' if season == 'summer' else '冬モード'
-    flash(f'{label}に切り替えました。', 'success')
-    return redirect(request.referrer or url_for('dashboard'))
-
-
 # ── Floor Plan ────────────────────────────────────────────────────────────────
 
 def get_setting(db, key):
@@ -610,7 +596,7 @@ def set_setting(db, key, value):
 @login_required
 def floorplan():
     db = get_db()
-    season = get_season(db)
+    season = get_season()
     today = date.today()
     image = get_setting(db, 'floorplan_image')
     plants = db.execute('SELECT * FROM plants WHERE archived=0 ORDER BY name').fetchall()
