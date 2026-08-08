@@ -7,9 +7,15 @@ import os
 import secrets
 import uuid
 import qrcode
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from functools import wraps
 from werkzeug.utils import secure_filename
+
+JST = timezone(timedelta(hours=9))
+
+
+def today_jst():
+    return datetime.now(JST).date()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB = os.path.join(BASE_DIR, 'data', 'plants.db')
@@ -81,7 +87,7 @@ SUMMER_MONTHS = {4, 5, 6, 7, 8, 9, 10}
 
 
 def get_season(reference_date=None):
-    d = reference_date or date.today()
+    d = reference_date or today_jst()
     return 'summer' if d.month in SUMMER_MONTHS else 'winter'
 
 
@@ -98,7 +104,7 @@ PAIR_SCHEDULE = {
 
 
 def get_pair_info(reference_date=None):
-    d = reference_date or date.today()
+    d = reference_date or today_jst()
     key = (d.year, d.month)
     pair = PAIR_SCHEDULE.get(key)
 
@@ -155,13 +161,13 @@ def plant_status(db, plant, season, today):
 
 def parse_log_date(value):
     if not value:
-        return date.today(), None
+        return today_jst(), None
     try:
         d = date.fromisoformat(value)
     except ValueError:
-        return date.today(), '日付の形式が正しくないため、本日の日付を使用しました。'
-    if d > date.today():
-        return date.today(), '未来の日付は指定できないため、本日の日付を使用しました。'
+        return today_jst(), '日付の形式が正しくないため、本日の日付を使用しました。'
+    if d > today_jst():
+        return today_jst(), '未来の日付は指定できないため、本日の日付を使用しました。'
     return d, None
 
 
@@ -230,7 +236,7 @@ def login():
             flash('登録者またはパスワードが間違っています。', 'danger')
 
     pair, changing_next_month = get_pair_info()
-    today = date.today()
+    today = today_jst()
     return render_template('login.html', users=users, pair=pair,
                             changing_next_month=changing_next_month, current_month=today.month)
 
@@ -248,7 +254,7 @@ def logout():
 def dashboard():
     db = get_db()
     season = get_season()
-    today = date.today()
+    today = today_jst()
     plants = db.execute('SELECT * FROM plants WHERE archived=0 ORDER BY name').fetchall()
 
     todo = []
@@ -269,7 +275,7 @@ def dashboard():
 def plant_list():
     db = get_db()
     season = get_season()
-    today = date.today()
+    today = today_jst()
     show_archived = request.args.get('archived') == '1'
     plants = db.execute(
         'SELECT * FROM plants WHERE archived=? ORDER BY name',
@@ -324,7 +330,7 @@ def plant_new():
                 int(f.get('fertilize_days') or 60),
                 f.get('fertilize_note', ''),
                 int(f.get('soil_days') or 365),
-                session['user_id'], date.today().isoformat(),
+                session['user_id'], today_jst().isoformat(),
             ))
             plant_id = db.execute('SELECT last_insert_rowid()').fetchone()[0]
             photo = save_photo(plant_id, request.files.get('photo'))
@@ -375,7 +381,7 @@ def plant_bulk_import():
             ''', (
                 p['name'], '', p['notes'],
                 7, 14, 60, '', 365,
-                session['user_id'], date.today().isoformat(),
+                session['user_id'], today_jst().isoformat(),
             ))
             created.append(p['name'])
         db.commit()
@@ -451,7 +457,7 @@ def plant_detail(plant_id):
         return redirect(url_for('plant_list'))
 
     season = get_season()
-    today = date.today()
+    today = today_jst()
     statuses = plant_status(db, plant, season, today)
 
     history = db.execute('''
@@ -495,7 +501,7 @@ def plant_log(plant_id):
         (plant_id, action, session['user_id'], log_date_str, request.form.get('comment', ''))
     )
     db.commit()
-    if log_date == date.today():
+    if log_date == today_jst():
         flash(f'{ACTIONS[action]["label"]}を記録しました！', 'success')
     else:
         flash(f'{ACTIONS[action]["label"]}を{log_date_str}分として記録しました！', 'success')
@@ -524,7 +530,7 @@ def plant_log_delete(plant_id, log_id):
 def water_all():
     db = get_db()
     plants = db.execute('SELECT * FROM plants WHERE archived=0 ORDER BY id').fetchall()
-    today = date.today()
+    today = today_jst()
     today_str = today.isoformat()
 
     if request.method == 'POST':
@@ -602,7 +608,7 @@ def bulk_undo():
     ''', (target_date_str,)).fetchall()
 
     return render_template('bulk_undo.html', logs=logs, target_date=target_date_str,
-                            today=date.today().isoformat())
+                            today=today_jst().isoformat())
 
 
 # ── Floor Plan ────────────────────────────────────────────────────────────────
@@ -624,7 +630,7 @@ def set_setting(db, key, value):
 def floorplan():
     db = get_db()
     season = get_season()
-    today = date.today()
+    today = today_jst()
     image = get_setting(db, 'floorplan_image')
     plants = db.execute('SELECT * FROM plants WHERE archived=0 ORDER BY name').fetchall()
     by_registration = db.execute('SELECT id FROM plants WHERE archived=0 ORDER BY id').fetchall()
@@ -699,7 +705,7 @@ def history():
         days = 30
     days = max(7, min(days, 90))
 
-    today = date.today()
+    today = today_jst()
     start = today - timedelta(days=days - 1)
     date_list = [start + timedelta(days=i) for i in range(days)]
 
